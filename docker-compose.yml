@@ -1,8 +1,10 @@
 services:
   backend:
-    image: djakerhakim/erpnext-hrms:v16
+    image: erpnext-hrms:v16
     networks:
       - frappe_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       restart_policy:
         condition: on-failure
@@ -10,15 +12,17 @@ services:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
     environment:
-      DB_HOST: db
-      DB_PORT: "3306"
-      MYSQL_ROOT_PASSWORD: admin
-      MARIADB_ROOT_PASSWORD: admin
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
 
   configurator:
-    image: djakerhakim/erpnext-hrms:v16
+    image: erpnext-hrms:v16
     networks:
       - frappe_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       restart_policy:
         condition: none
@@ -35,19 +39,21 @@ services:
         bench set-config -g redis_socketio "redis://$$REDIS_QUEUE";
         bench set-config -gp socketio_port $$SOCKETIO_PORT;
     environment:
-      DB_HOST: db
-      DB_PORT: "3306"
-      REDIS_CACHE: redis-cache:6379
-      REDIS_QUEUE: redis-queue:6379
-      SOCKETIO_PORT: "9000"
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      REDIS_CACHE: ${REDIS_CACHE}
+      REDIS_QUEUE: ${REDIS_QUEUE}
+      SOCKETIO_PORT: ${SOCKETIO_PORT}
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
 
   create-site:
-    image: djakerhakim/erpnext-hrms:v16
+    image: erpnext-hrms:v16
     networks:
       - frappe_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       restart_policy:
         condition: none
@@ -59,7 +65,7 @@ services:
       - -c
     command:
       - >
-        wait-for-it -t 120 db:3306;
+        wait-for-it -t 120 ${DB_HOST}:${DB_PORT};
         wait-for-it -t 120 redis-cache:6379;
         wait-for-it -t 120 redis-queue:6379;
         export start=`date +%s`;
@@ -75,33 +81,12 @@ services:
           fi
         done;
         echo "sites/common_site_config.json found";
-        bench new-site --mariadb-user-host-login-scope='%' --admin-password=admin --db-root-username=root --db-root-password=admin --install-app erpnext --set-default frontend;
-        bench --site frontend install-app hrms;
-        bench use frontend;     
-  db:
-    image: mariadb:10.6
-    networks:
-      - frappe_network
-    healthcheck:
-      test: mysqladmin ping -h localhost --password=admin
-      interval: 1s
-      retries: 20
-    deploy:
-      restart_policy:
-        condition: on-failure
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-      - --skip-character-set-client-handshake
-      - --skip-innodb-read-only-compressed # Temporary fix for MariaDB 10.6
-    environment:
-      MYSQL_ROOT_PASSWORD: admin
-      MARIADB_ROOT_PASSWORD: admin
-    volumes:
-      - db-data:/var/lib/mysql
+        bench new-site --mariadb-user-host-login-scope='%' --admin-password=${ADMIN_PASSWORD} --db-root-username=${DB_ROOT_USERNAME} --db-root-password=${MYSQL_ROOT_PASSWORD} --db-name=${DB_NAME} --install-app erpnext --set-default ${FRAPPE_SITE_NAME};
+        bench --site ${FRAPPE_SITE_NAME} install-app hrms;
+        bench use ${FRAPPE_SITE_NAME};
 
   frontend:
-    image: djakerhakim/erpnext-hrms:v16
+    image: erpnext-hrms:v16
     networks:
       - frappe_network
     depends_on:
@@ -110,21 +95,21 @@ services:
       restart_policy:
         condition: on-failure
     entrypoint:
-    - bash
-    - -c
+      - bash
+      - -c
     command:
       - >
         ln -sfn /home/frappe/frappe-bench/apps/hrms/hrms/public /home/frappe/frappe-bench/sites/assets/hrms;
         exec nginx-entrypoint.sh
     environment:
-      BACKEND: backend:8000
-      FRAPPE_SITE_NAME_HEADER: frontend
-      SOCKETIO: websocket:9000
-      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
-      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
-      UPSTREAM_REAL_IP_RECURSIVE: "off"
-      PROXY_READ_TIMEOUT: 120
-      CLIENT_MAX_BODY_SIZE: 50m
+      BACKEND: ${BACKEND}
+      FRAPPE_SITE_NAME_HEADER: ${FRAPPE_SITE_NAME}
+      SOCKETIO: ${SOCKETIO}
+      UPSTREAM_REAL_IP_ADDRESS: ${UPSTREAM_REAL_IP_ADDRESS}
+      UPSTREAM_REAL_IP_HEADER: ${UPSTREAM_REAL_IP_HEADER}
+      UPSTREAM_REAL_IP_RECURSIVE: ${UPSTREAM_REAL_IP_RECURSIVE}
+      PROXY_READ_TIMEOUT: ${PROXY_READ_TIMEOUT}
+      CLIENT_MAX_BODY_SIZE: ${CLIENT_MAX_BODY_SIZE}
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
@@ -132,7 +117,7 @@ services:
       - "8080:8080"
 
   queue-long:
-    image: djakerhakim/erpnext-hrms:v16
+    image: erpnext-hrms:v16
     networks:
       - frappe_network
     deploy:
@@ -147,11 +132,11 @@ services:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
     environment:
-      FRAPPE_REDIS_CACHE: redis://redis-cache:6379
-      FRAPPE_REDIS_QUEUE: redis://redis-queue:6379
+      FRAPPE_REDIS_CACHE: redis://${REDIS_CACHE}
+      FRAPPE_REDIS_QUEUE: redis://${REDIS_QUEUE}
 
   queue-short:
-    image: djakerhakim/erpnext-hrms:v16
+    image: erpnext-hrms:v16
     networks:
       - frappe_network
     deploy:
@@ -166,8 +151,8 @@ services:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
     environment:
-      FRAPPE_REDIS_CACHE: redis://redis-cache:6379
-      FRAPPE_REDIS_QUEUE: redis://redis-queue:6379
+      FRAPPE_REDIS_CACHE: redis://${REDIS_CACHE}
+      FRAPPE_REDIS_QUEUE: redis://${REDIS_QUEUE}
 
   redis-queue:
     image: redis:6.2-alpine
@@ -188,7 +173,7 @@ services:
         condition: on-failure
 
   scheduler:
-    image: djakerhakim/erpnext-hrms:v16
+    image: erpnext-hrms:v16
     networks:
       - frappe_network
     deploy:
@@ -202,7 +187,7 @@ services:
       - logs:/home/frappe/frappe-bench/logs
 
   websocket:
-    image: djakerhakim/erpnext-hrms:v16
+    image: erpnext-hrms:v16
     networks:
       - frappe_network
     deploy:
@@ -212,14 +197,13 @@ services:
       - node
       - /home/frappe/frappe-bench/apps/frappe/socketio.js
     environment:
-      FRAPPE_REDIS_CACHE: redis://redis-cache:6379
-      FRAPPE_REDIS_QUEUE: redis://redis-queue:6379
+      FRAPPE_REDIS_CACHE: redis://${REDIS_CACHE}
+      FRAPPE_REDIS_QUEUE: redis://${REDIS_QUEUE}
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
 
 volumes:
-  db-data:
   redis-queue-data:
   sites:
   logs:
