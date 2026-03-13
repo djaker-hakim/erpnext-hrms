@@ -1,6 +1,6 @@
 services:
   backend:
-    image: erpnext-hrms:v16
+    image: djakerhakim/erpnext-hrms:v16
     networks:
       - frappe_network
     extra_hosts:
@@ -18,7 +18,7 @@ services:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
 
   configurator:
-    image: erpnext-hrms:v16
+    image: djakerhakim/erpnext-hrms:v16
     networks:
       - frappe_network
     extra_hosts:
@@ -49,7 +49,7 @@ services:
       - logs:/home/frappe/frappe-bench/logs
 
   create-site:
-    image: erpnext-hrms:v16
+    image: djakerhakim/erpnext-hrms:v16
     networks:
       - frappe_network
     extra_hosts:
@@ -86,7 +86,7 @@ services:
         bench use ${FRAPPE_SITE_NAME};
 
   frontend:
-    image: erpnext-hrms:v16
+    image: djakerhakim/erpnext-hrms:v16
     networks:
       - frappe_network
     depends_on:
@@ -117,7 +117,7 @@ services:
       - "8080:8080"
 
   queue-long:
-    image: erpnext-hrms:v16
+    image: djakerhakim/erpnext-hrms:v16
     networks:
       - frappe_network
     deploy:
@@ -136,7 +136,7 @@ services:
       FRAPPE_REDIS_QUEUE: redis://${REDIS_QUEUE}
 
   queue-short:
-    image: erpnext-hrms:v16
+    image: djakerhakim/erpnext-hrms:v16
     networks:
       - frappe_network
     deploy:
@@ -173,7 +173,7 @@ services:
         condition: on-failure
 
   scheduler:
-    image: erpnext-hrms:v16
+    image: djakerhakim/erpnext-hrms:v16
     networks:
       - frappe_network
     deploy:
@@ -187,7 +187,7 @@ services:
       - logs:/home/frappe/frappe-bench/logs
 
   websocket:
-    image: erpnext-hrms:v16
+    image: djakerhakim/erpnext-hrms:v16
     networks:
       - frappe_network
     deploy:
