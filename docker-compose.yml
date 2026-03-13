@@ -75,7 +75,7 @@ services:
           fi
         done;
         echo "sites/common_site_config.json found";
-        bench new-site --mariadb-user-host-login-scope='%' --admin-password=${ADMIN_PASSWORD} --db-root-username=${DB_ROOT_USERNAME} --db-root-password=${MYSQL_ROOT_PASSWORD} --install-app erpnext --install-app hrms --set-default ${FRAPPE_SITE_NAME};
+        bench new-site --mariadb-user-host-login-scope='%' --admin-password=${ADMIN_PASSWORD} --db-root-username=${DB_ROOT_USERNAME} --db-root-password=${MYSQL_ROOT_PASSWORD} --db-name=${DB_NAME} --install-app erpnext --install-app hrms --set-default ${FRAPPE_SITE_NAME};
         bench use ${FRAPPE_SITE_NAME};     
   db:
     image: mariadb:10.6
