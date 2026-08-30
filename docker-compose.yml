@@ -1,6 +1,6 @@
 services:
   backend:
-    image: djakerhakim/erpnext-hrms:v16
+    image: djakerhakim/frappe:v1.1
     networks:
       - frappe_network
     deploy:
@@ -16,7 +16,7 @@ services:
       MARIADB_ROOT_PASSWORD: admin
 
   configurator:
-    image: djakerhakim/erpnext-hrms:v16
+    image: djakerhakim/frappe:v1.1
     networks:
       - frappe_network
     deploy:
@@ -45,7 +45,7 @@ services:
       - logs:/home/frappe/frappe-bench/logs
 
   create-site:
-    image: djakerhakim/erpnext-hrms:v16
+    image: djakerhakim/frappe:v1.1
     networks:
       - frappe_network
     deploy:
@@ -75,8 +75,7 @@ services:
           fi
         done;
         echo "sites/common_site_config.json found";
-        bench new-site --mariadb-user-host-login-scope='%' --admin-password=admin --db-root-username=root --db-root-password=admin --install-app erpnext --set-default frontend;
-        bench --site frontend install-app hrms;      
+        bench new-site --mariadb-user-host-login-scope='%' --admin-password=admin --db-root-username=root --db-root-password=admin --install-app erpnext --install-app hrms --set-default lourscorp;
   db:
     image: mariadb:10.6
     networks:
@@ -100,7 +99,7 @@ services:
       - db-data:/var/lib/mysql
 
   frontend:
-    image: djakerhakim/erpnext-hrms:v16
+    image: djakerhakim/frappe:v1.1
     networks:
       - frappe_network
     depends_on:
@@ -108,16 +107,11 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
-    entrypoint:
-    - bash
-    - -c
     command:
-      - >
-        ln -sfn /home/frappe/frappe-bench/apps/hrms/hrms/public /home/frappe/frappe-bench/sites/assets/hrms;
-        exec nginx-entrypoint.sh
+      - nginx-entrypoint.sh
     environment:
       BACKEND: backend:8000
-      FRAPPE_SITE_NAME_HEADER: frontend
+      FRAPPE_SITE_NAME_HEADER: lourscorp
       SOCKETIO: websocket:9000
       UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
       UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
@@ -131,7 +125,7 @@ services:
       - "8080:8080"
 
   queue-long:
-    image: djakerhakim/erpnext-hrms:v16
+    image: djakerhakim/frappe:v1.1
     networks:
       - frappe_network
     deploy:
@@ -150,7 +144,7 @@ services:
       FRAPPE_REDIS_QUEUE: redis://redis-queue:6379
 
   queue-short:
-    image: djakerhakim/erpnext-hrms:v16
+    image: djakerhakim/frappe:v1.1
     networks:
       - frappe_network
     deploy:
@@ -187,7 +181,7 @@ services:
         condition: on-failure
 
   scheduler:
-    image: djakerhakim/erpnext-hrms:v16
+    image: djakerhakim/frappe:v1.1
     networks:
       - frappe_network
     deploy:
@@ -201,7 +195,7 @@ services:
       - logs:/home/frappe/frappe-bench/logs
 
   websocket:
-    image: djakerhakim/erpnext-hrms:v16
+    image: djakerhakim/frappe:v1.1
     networks:
       - frappe_network
     deploy:
