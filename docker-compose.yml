@@ -1,6 +1,6 @@
 services:
   backend:
-    image: djakerhakim/erpnext-hrms:v16
+    image: ${FRAPPE_IMG}
     networks:
       - frappe_network
     deploy:
@@ -16,7 +16,7 @@ services:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
 
   configurator:
-    image: djakerhakim/erpnext-hrms:v16
+    image: ${FRAPPE_IMG}
     networks:
       - frappe_network
     deploy:
@@ -45,7 +45,7 @@ services:
       - logs:/home/frappe/frappe-bench/logs
 
   create-site:
-    image: djakerhakim/erpnext-hrms:v16
+    image: ${FRAPPE_IMG}
     networks:
       - frappe_network
     deploy:
@@ -75,7 +75,7 @@ services:
           fi
         done;
         echo "sites/common_site_config.json found";
-        bench new-site --mariadb-user-host-login-scope='%' --admin-password=${ADMIN_PASSWORD} --db-root-username=${DB_ROOT_USERNAME} --db-root-password=${MYSQL_ROOT_PASSWORD} --db-name=${DB_NAME} --install-app erpnext --install-app hrms --set-default ${FRAPPE_SITE_NAME};
+        bench new-site --mariadb-user-host-login-scope='%' --admin-password=${ADMIN_PASSWORD} --db-root-username=${DB_ROOT_USERNAME} --db-root-password=${MYSQL_ROOT_PASSWORD} --db-name=${DB_NAME} --install-app erpnext --install-app hrms --install-app lours_extension --install-app maintenance_hw --set-default ${FRAPPE_SITE_NAME};
         bench use ${FRAPPE_SITE_NAME};     
   db:
     image: mariadb:10.6
@@ -100,7 +100,7 @@ services:
       - db-data:/var/lib/mysql
 
   frontend:
-    image: djakerhakim/erpnext-hrms:v16
+    image: ${FRAPPE_IMG}
     networks:
       - frappe_network
     depends_on:
@@ -131,7 +131,7 @@ services:
       - "8080:8080"
 
   queue-long:
-    image: djakerhakim/erpnext-hrms:v16
+    image: ${FRAPPE_IMG}
     networks:
       - frappe_network
     deploy:
@@ -150,7 +150,7 @@ services:
       FRAPPE_REDIS_QUEUE: redis://${REDIS_QUEUE}
 
   queue-short:
-    image: djakerhakim/erpnext-hrms:v16
+    image: ${FRAPPE_IMG}
     networks:
       - frappe_network
     deploy:
@@ -187,7 +187,7 @@ services:
         condition: on-failure
 
   scheduler:
-    image: djakerhakim/erpnext-hrms:v16
+    image: ${FRAPPE_IMG}
     networks:
       - frappe_network
     deploy:
@@ -201,7 +201,7 @@ services:
       - logs:/home/frappe/frappe-bench/logs
 
   websocket:
-    image: djakerhakim/erpnext-hrms:v16
+    image: ${FRAPPE_IMG}
     networks:
       - frappe_network
     deploy:
